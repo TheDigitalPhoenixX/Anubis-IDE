@@ -3,16 +3,27 @@
 #############      I've borrowed a function (serial_ports()) from a guy in stack overflow whome I can't remember his name, so I gave hime the copyrights of this function, thank you  ########
 
 
-import sys
 import glob
-import serial
-
-import Python_Coloring
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+import sys
+from enum import Enum, auto
 from pathlib import Path
+
+import serial
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
+import csharp_coloring
+import Python_Coloring
+
+
+class Languages(Enum):
+    CSHARP = auto()
+    PYTHON = auto()
+
+
+def isPythonFile(filename):
+    return filename.split(".")[-1] == 'py'
 
 
 def serial_ports():
@@ -71,7 +82,7 @@ class Signal(QObject):
 # Making text editor as A global variable (to solve the issue of being local to (self) in widget class)
 text = QTextEdit
 text2 = QTextEdit
-
+currentLanguage = Languages.PYTHON
 #
 #
 #
@@ -117,9 +128,10 @@ class text_widget(QWidget):
 #
 class Widget(QWidget):
 
-    def __init__(self):
+    def __init__(self, ui):
         super().__init__()
         self.initUI()
+        self.ui = ui
 
     def initUI(self):
 
@@ -189,11 +201,12 @@ class Widget(QWidget):
     # defining a new Slot (takes string) to save the text inside the first text editor
     @pyqtSlot(str)
     def Saving(s):
-        with open('main.py', 'w') as f:
+        with open(f"main.{'py' if currentLanguage == Languages.PYTHON else 'cs'}", 'w') as f:
             TEXT = text.toPlainText()
             f.write(TEXT)
 
     # defining a new Slot (takes string) to set the string to the text editor
+
     @pyqtSlot(str)
     def Open(s):
         global text
@@ -203,6 +216,9 @@ class Widget(QWidget):
 
         nn = self.sender().model().filePath(index)
         nn = tuple([nn])
+
+        (UI.switch_to_py if isPythonFile(
+            nn[0]) else UI.switch_to_cs)(self.ui)
 
         if nn[0]:
             f = open(nn[0], 'r')
@@ -270,7 +286,7 @@ class UI(QMainWindow):
         filemenu = menu.addMenu('File')
         Port = menu.addMenu('Port')
         Run = menu.addMenu('Run')
-
+        language_menu = menu.addMenu('Language')
         # As any PC or laptop have many ports, so I need to list them to the User
         # so I made (Port_Action) to add the Ports got from (serial_ports()) function
         # copyrights of serial_ports() function goes back to a guy from stackoverflow(whome I can't remember his name), so thank you (unknown)
@@ -308,12 +324,20 @@ class UI(QMainWindow):
         filemenu.addAction(Close_Action)
         filemenu.addAction(Open_Action)
 
+        switch_to_cs_action = QAction('C#', self)
+        switch_to_cs_action.triggered.connect(self.switch_to_cs)
+        switch_to_py_action = QAction('Python', self)
+        switch_to_py_action.triggered.connect(self.switch_to_py)
+
+        language_menu.addAction(switch_to_py_action)
+        language_menu.addAction(switch_to_cs_action)
+
         # Seting the window Geometry
         self.setGeometry(200, 150, 600, 500)
         self.setWindowTitle('Anubis IDE')
         self.setWindowIcon(QtGui.QIcon('Anubis.png'))
 
-        widget = Widget()
+        widget = Widget(self)
 
         self.setCentralWidget(widget)
         self.show()
@@ -345,10 +369,23 @@ class UI(QMainWindow):
     def save(self):
         self.b.reading.emit("name")
 
+    def switch_to_cs(self):
+        global currentLanguage
+        currentLanguage = Languages.CSHARP
+        csharp_coloring.CSharpHighlighter(text)
+
+    def switch_to_py(self):
+        global currentLanguage
+        currentLanguage = Languages.PYTHON
+        Python_Coloring.PythonHighlighter(text)
+
     # I made this function to open a file and exhibits it to the user in a text editor
 
     def open(self):
         file_name = QFileDialog.getOpenFileName(self, 'Open File', '/home')
+
+        (self.switch_to_py if isPythonFile(
+            file_name[0]) else self.switch_to_cs)()
 
         if file_name[0]:
             f = open(file_name[0], 'r')
@@ -362,6 +399,7 @@ class UI(QMainWindow):
 ############ end of Class ############
 #
 #
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
