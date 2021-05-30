@@ -37,22 +37,22 @@ STYLES2 = {
     'numbers': format([100, 150, 190]),
 }
 STYLES = {
-       'keyword': format('blue'),
-      'operator': format('red'),
-       'brace': format('darkGray'),
-       'defclass': format('black', 'bold'),
-       'string': format('magenta'),
-       'string2': format('darkMagenta'),
-       'comment': format('darkGreen', 'italic'),
-       'self': format('black', 'italic'),
-       'numbers': format('brown'),
-   }
+    'keyword': format('blue'),
+    'operator': format('red'),
+    'brace': format('darkGray'),
+    'defclass': format('black', 'bold'),
+    'string': format('magenta'),
+    'string2': format('darkMagenta'),
+    'comment': format('darkGreen', 'italic'),
+    'self': format('black', 'italic'),
+    'numbers': format('brown'),
+}
+
 
 class PythonHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for the Python language.
     """
     # Python keywords
-
 
     keywords = [
         'and', 'assert', 'break', 'class', 'continue', 'def',
@@ -121,7 +121,8 @@ class PythonHighlighter(QSyntaxHighlighter):
             # Numeric literals
             (r'\b[+-]?[0-9]+[lL]?\b', 0, STYLES['numbers']),
             (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b',
+             0, STYLES['numbers']),
         ]
 
         # Build a QRegExp for each pattern
